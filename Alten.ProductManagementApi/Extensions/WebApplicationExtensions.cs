@@ -59,7 +59,7 @@ public static class WebApplicationExtensions
                         new Claim(ClaimTypes.Email, user.Email),                 // L'email de l'utilisateur (utilisé pour la politique admin)
                         new Claim(ClaimTypes.Name, user.Username)                // Le nom d'utilisateur
                 }),
-                Expires = DateTime.UtcNow.AddHours(1), // Token valide 1 heure
+                Expires = DateTime.UtcNow.AddHours(10), // Token valide 10 heures
                 Issuer = jwtSettings["Issuer"],
                 Audience = jwtSettings["Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

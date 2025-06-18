@@ -1,8 +1,10 @@
-﻿using Alten.ProductManagementApi.Repositories.Implementations;
+﻿using Alten.ProductManagementApi.Helpers;
+using Alten.ProductManagementApi.Repositories.Implementations;
 using Alten.ProductManagementApi.Repositories.Interfaces;
 using Alten.ProductManagementApi.Services.Implementations;
 using Alten.ProductManagementApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -23,6 +25,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IWishlistService, WishlistService>();
+
+        // Enregistrement des Helpers/Utilitaires
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtHelper, JwtHelper>();
 
         return services;
     }

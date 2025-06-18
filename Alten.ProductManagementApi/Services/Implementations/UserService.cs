@@ -1,16 +1,20 @@
-﻿using Alten.ProductManagementApi.Models;
+﻿using Alten.ProductManagementApi.Helpers;
+using Alten.ProductManagementApi.Models;
 using Alten.ProductManagementApi.Repositories.Interfaces;
 using Alten.ProductManagementApi.Services.Interfaces;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Alten.ProductManagementApi.Services.Implementations;
 
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<User> CreateUserAsync(User user)
@@ -38,6 +42,13 @@ public class UserService : IUserService
         // on suppose que l'endpoint a déjà haché le mot de passe avant de créer l'objet User.
         // Si tu passes le DTO au service, tu feras le hachage ici.
         // Exemple : public async Task<User> CreateUserAsync(RegisterRequest request) { ... user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password); ... }
+
+        // Hachage du mot de passe
+        user.PasswordHash = _passwordHasher.HashPassword(user.PasswordHash);
+
+        // Définition de IsActive et CreatedAt juste avant l'ajout
+        user.IsActive = true; // <-- Définition explicite à TRUE
+        user.CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); // <-- Définition à la date du jour (timestamp Unix)
 
         // Le repository va insérer l'utilisateur et retourner l'objet User avec son ID généré.
         return await _userRepository.AddUserAsync(user);

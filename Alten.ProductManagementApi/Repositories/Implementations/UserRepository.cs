@@ -16,9 +16,9 @@ public class UserRepository : IUserRepository
 
     public async Task<User> AddUserAsync(User user)
     {
-        var sql = @"INSERT INTO Users (Username, Firstname, Email, PasswordHash)
-                        VALUES (@Username, @Firstname, @Email, @PasswordHash)
-                        RETURNING Id, Username, Firstname, Email, PasswordHash;"; // Retourne l'objet complet avec l'ID généré
+        var sql = @"INSERT INTO Users (Username, Firstname, Email, PasswordHash, IsActive, CreatedAt)
+                        VALUES (@Username, @Firstname, @Email, @PasswordHash, @IsActive, @CreatedAt)
+                        RETURNING Id, Username, Firstname, Email, PasswordHash, IsActive, CreatedAt;"; // Retourne l'objet complet avec l'ID généré
         return await _dbConnection.QuerySingleAsync<User>(sql, user);
     }
 
