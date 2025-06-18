@@ -1,0 +1,6 @@
+@Alten.ProductManagementApi_HostAddress = http://localhost:5105
+
+GET {{Alten.ProductManagementApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
