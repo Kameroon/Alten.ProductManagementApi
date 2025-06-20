@@ -6,5 +6,5 @@ public interface IUserService
 {
     Task<User> CreateUserAsync(User user);
     Task<User?> GetUserByEmailAsync(string email);
-    Task<bool> ValidateUserCredentialsAsync(string email, string password);
+    Task<(bool IsSuccess, User? User)> ValidateUserCredentialsAsync(string email, string password);
 }

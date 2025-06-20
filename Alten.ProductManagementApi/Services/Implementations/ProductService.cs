@@ -25,30 +25,22 @@ public class ProductService : IProductService
 
     public async Task<Product> CreateProductAsync(Product product)
     {
-        // Exemple de logique métier: s'assurer que le nom n'est pas vide
         if (string.IsNullOrWhiteSpace(product.Name))
-        {
-            throw new ArgumentException("Product name cannot be empty.", nameof(product.Name));
-        }
-        // Définit les timestamps avant l'ajout
+            throw new ArgumentException("Le nom du propduit ne être vide.", nameof(product.Name));
+
         product.CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         product.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        // Le repository ajoute le produit et retourne l'ID généré
         product.Id = await _productRepository.AddProductAsync(product);
         return product;
     }
 
     public async Task<bool> UpdateProductAsync(Product product)
     {
-        // Vérifie si le produit existe avant de tenter la mise à jour
-        var existingProduct = await _productRepository.GetProductByIdAsync(product.Id);
+        var existingProduct = await CheckExistingProduct(product.Id);
         if (existingProduct == null)
-        {
-            return false; // Produit non trouvé
-        }
+            return false;
 
-        // Applique les mises à jour (tu peux choisir de ne mettre à jour que certaines propriétés)
         existingProduct.Code = product.Code;
         existingProduct.Name = product.Name;
         existingProduct.Description = product.Description;
@@ -60,14 +52,28 @@ public class ProductService : IProductService
         existingProduct.ShellId = product.ShellId;
         existingProduct.InventoryStatus = product.InventoryStatus;
         existingProduct.Rating = product.Rating;
-        existingProduct.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); // Met à jour le timestamp
+        existingProduct.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); 
 
         return await _productRepository.UpdateProductAsync(existingProduct);
     }
 
     public async Task<bool> DeleteProductAsync(int id)
     {
-        // Ici, tu pourrais ajouter des vérifications supplémentaires, par exemple si le produit est en stock ou dans un panier actif
+        if (id <= 0)
+            throw new ArgumentException("L'ID du produit doit être supérieur à zéro.", nameof(id));
+        if (await CheckExistingProduct(id) == null)
+            throw new KeyNotFoundException($"Aucun produit trouvé avec l'ID {id}.");
+
         return await _productRepository.DeleteProductAsync(id);
+    }
+
+    /// <summary>
+    /// -- Checks if a product with the given ID exists in the repository.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    private async Task<Product?> CheckExistingProduct(int id)
+    {
+        return await _productRepository.GetProductByIdAsync(id);
     }
 }

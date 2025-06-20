@@ -2,7 +2,7 @@
 using Alten.ProductManagementApi.Repositories.Interfaces;
 using Dapper;
 using ProductManagementApi.Models;
-using System.Data; // Pour IDbConnection
+using System.Data;
 
 public class ProductRepository : IProductRepository
 {

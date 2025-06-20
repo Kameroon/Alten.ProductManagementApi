@@ -36,7 +36,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection("Jwt");
-        // S'assurer que la clé existe et n'est pas nulle
+        
         var key = Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key not configured."));
 
         services.AddAuthentication(options =>

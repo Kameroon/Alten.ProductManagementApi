@@ -18,19 +18,19 @@ public class UserRepository : IUserRepository
     {
         var sql = @"INSERT INTO Users (Username, Firstname, Email, PasswordHash, IsActive, CreatedAt)
                         VALUES (@Username, @Firstname, @Email, @PasswordHash, @IsActive, @CreatedAt)
-                        RETURNING Id, Username, Firstname, Email, PasswordHash, IsActive, CreatedAt;"; // Retourne l'objet complet avec l'ID généré
+                        RETURNING Id, Username, Firstname, Email, PasswordHash, IsActive, CreatedAt;"; 
         return await _dbConnection.QuerySingleAsync<User>(sql, user);
     }
 
     public async Task<User?> GetUserByIdAsync(int id)
     {
-        var sql = "SELECT Id, Username, Firstname, Email, PasswordHash FROM Users WHERE Id = @Id;";
+        var sql = "SELECT Id, Username, Firstname, Email, PasswordHash, isactive FROM Users WHERE Id = @Id;";
         return await _dbConnection.QuerySingleOrDefaultAsync<User>(sql, new { Id = id });
     }
 
     public async Task<User?> GetUserByEmailAsync(string email)
     {
-        var sql = "SELECT Id, Username, Firstname, Email, PasswordHash FROM Users WHERE Email = @Email;";
+        var sql = "SELECT Id, Username, Firstname, Email, PasswordHash, isactive FROM Users WHERE Email = @Email;";
         return await _dbConnection.QuerySingleOrDefaultAsync<User>(sql, new { Email = email });
     }
 

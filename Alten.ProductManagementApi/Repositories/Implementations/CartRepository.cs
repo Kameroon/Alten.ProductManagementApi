@@ -38,7 +38,7 @@ public class CartRepository : ICartRepository
         var sql = @"INSERT INTO CartItems (UserId, ProductId, Quantity, AddedAt)
                         VALUES (@UserId, @ProductId, @Quantity, @AddedAt)
                         RETURNING Id, UserId, ProductId, Quantity, AddedAt;";
-        // Important: AddedAt from model should be DateTime.UtcNow before passing it here
+        
         return await _dbConnection.QuerySingleAsync<CartItem>(sql, cartItem);
     }
 
@@ -46,7 +46,7 @@ public class CartRepository : ICartRepository
     {
         var sql = @"UPDATE CartItems SET
                         Quantity = @Quantity, AddedAt = @AddedAt
-                        WHERE Id = @Id;"; // Or use UserId and ProductId in WHERE clause if Id is not known
+                        WHERE Id = @Id;"; 
         var affectedRows = await _dbConnection.ExecuteAsync(sql, cartItem);
         return affectedRows > 0;
     }
