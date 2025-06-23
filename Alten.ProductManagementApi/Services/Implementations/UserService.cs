@@ -23,9 +23,11 @@ public class UserService : IUserService
         if (existingUser != null)
             throw new InvalidOperationException($"L'adresse email '{user.Email}' existe déjà.");
 
+        user.IsActive = true;
+        user.Email = user.Email.Trim();
+        user.Username = user.Username.Trim();
+        user.Firstname = user.Firstname.Trim();
         user.PasswordHash = _passwordHasher.HashPassword(user.PasswordHash);
-
-        user.IsActive = true; 
         user.CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); // <-- (timestamp Unix)
 
         return await _userRepository.AddUserAsync(user);
@@ -42,7 +44,7 @@ public class UserService : IUserService
         if (user == null || !user.IsActive)
             return (false, null);
 
-        var isValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+        var isValid = _passwordHasher.VerifyPassword(password, user.PasswordHash);
         return (isValid, isValid ? user : null);
     }
 }

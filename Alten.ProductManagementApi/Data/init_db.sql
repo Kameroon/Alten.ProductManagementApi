@@ -1,11 +1,31 @@
+
+-- Create the new database
+CREATE DATABASE product_db
+   WITH
+    OWNER = postgres      
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'fr_FR.UTF-8' 
+    LC_CTYPE = 'fr_FR.UTF-8'  
+    TEMPLATE = template0       
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1
+    IS_TEMPLATE = False;
+
+
 -- Create Users table
 CREATE TABLE IF NOT EXISTS Users (
     Id SERIAL PRIMARY KEY,
     Username VARCHAR(255) NOT NULL,
     Firstname VARCHAR(255),
     Email VARCHAR(255) UNIQUE NOT NULL,
-    PasswordHash VARCHAR(255) NOT NULL
+    PasswordHash VARCHAR(255) NOT NULL,
+	
 );
+
+ALTER TABLE Users
+ADD COLUMN IsActive BOOLEAN;
+
+Alter table users add createdat bigint 
 
 -- Create Products table
 CREATE TABLE IF NOT EXISTS Products (

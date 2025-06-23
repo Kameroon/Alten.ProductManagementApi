@@ -29,7 +29,6 @@ public class ProductService : IProductService
             throw new ArgumentException("Le nom du propduit ne être vide.", nameof(product.Name));
 
         product.CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        product.UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         product.Id = await _productRepository.AddProductAsync(product);
         return product;
@@ -75,5 +74,31 @@ public class ProductService : IProductService
     private async Task<Product?> CheckExistingProduct(int id)
     {
         return await _productRepository.GetProductByIdAsync(id);
+    }
+
+    private Product BuildProduct(Product product)
+    {
+        if (product == null)
+            throw new ArgumentNullException(nameof(product), "Le produit ne peut pas être nul.");
+        if (string.IsNullOrWhiteSpace(product.Name))
+            throw new ArgumentException("Le nom du produit ne peut pas être vide.", nameof(product.Name));
+
+        Product newProduct = new Product
+        {  
+            Code = product.Code,
+            Name = product.Name,
+            Description = product.Description,
+            Image = product.Image,
+            Category = product.Category,
+            Price = product.Price,
+            Quantity = product.Quantity,
+            InternalReference = product.InternalReference,
+            ShellId = product.ShellId,
+            InventoryStatus = product.InventoryStatus,
+            Rating = product.Rating,
+            UpdatedAt = product.CreatedAt
+        };
+
+        return newProduct;
     }
 }

@@ -14,19 +14,19 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Repositories
+        // -- Repositories -- 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IWishlistRepository, WishlistRepository>();
 
-        // Services
+        // -- Services -- 
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IWishlistService, WishlistService>();
 
-        // Enregistrement des Helpers/Utilitaires
+        // -- Enregistrement des Helpers/Utilitaires -- 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtHelper, JwtHelper>();
 
@@ -46,7 +46,7 @@ public static class ServiceCollectionExtensions
         })
         .AddJwtBearer(options =>
         {
-            options.RequireHttpsMetadata = false; // Dev uniquement. Utilise true en production!
+            options.RequireHttpsMetadata = false;
             options.SaveToken = true;
             options.TokenValidationParameters = new TokenValidationParameters
             {
@@ -56,8 +56,8 @@ public static class ServiceCollectionExtensions
                 ValidIssuer = jwtSettings["Issuer"],
                 ValidateAudience = true,
                 ValidAudience = jwtSettings["Audience"],
-                ValidateLifetime = true, // Vérifie la durée de vie du token
-                ClockSkew = TimeSpan.Zero // Tolérance de temps pour l'expiration du token
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromSeconds(50) // -- Tolérance de temps pour l'expiration du token -- 
             };
         });
 

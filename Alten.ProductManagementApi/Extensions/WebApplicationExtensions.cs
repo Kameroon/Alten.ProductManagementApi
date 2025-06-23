@@ -12,34 +12,6 @@ namespace Alten.ProductManagementApi.Extensions;
 
 public static class WebApplicationExtensions
 {
-
-    #region -- TO DELETED --
-    private static async Task<IResult> CryptPassword()
-    {
-        try
-        {
-            List<string> passwords = new List<string>
-            {
-                "adminpassword",
-                "Securep@ss!",
-                "!Strong@3456"
-            };
-
-            foreach (var password in passwords)
-            {
-                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
-                Console.WriteLine("Mot de passe haché: " + hashedPassword);
-            }
-
-            return Results.Ok();
-        }
-        catch (Exception exception)
-        {
-            return Results.Problem(exception.Message);
-        }
-    }
-    #endregion
-
     /// <summary>
     /// -- Maps endpoints for user authentication and registration.
     /// </summary>
@@ -48,10 +20,7 @@ public static class WebApplicationExtensions
     /// <exception cref="InvalidOperationException"></exception>
     public static WebApplication MapAuthenticationEndpoints(this WebApplication app)
     {
-        // TO DELETED
-        app.MapGet("/api/CryptPassword", CryptPassword);
-
-        app.MapPost("/account", async (RegisterRequest request, IUserService userService) =>
+        app.MapPost("/account", async (RegisterRequest request, IUserService userService, IPasswordHasher passwordHasher) =>
         {
             var existingUser = await userService.GetUserByEmailAsync(request.Email);
             if (existingUser != null)
@@ -62,7 +31,7 @@ public static class WebApplicationExtensions
                 Username = request.Username,
                 Firstname = request.Firstname,
                 Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
+                PasswordHash = passwordHasher.HashPassword(request.Password)
             };
 
             var createdUser = await userService.CreateUserAsync(newUser);
@@ -70,13 +39,14 @@ public static class WebApplicationExtensions
             return Results.Created($"/users/{createdUser.Id}", new { createdUser.Id, createdUser.Username, createdUser.Email });
         });
 
-        app.MapPost("/token", async (LoginRequest request, IUserService userService, IConfiguration configuration, IJwtHelper jwtHelper) =>
+        app.MapPost("/token", async (LoginRequest request, IUserService userService, IConfiguration configuration,
+            IJwtHelper jwtHelper, IPasswordHasher passwordHasher) =>
         {
             var user = await userService.GetUserByEmailAsync(request.Email);
             if (user == null)
                 return Results.Unauthorized();
 
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            if (!passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
                 return Results.Unauthorized();
 
             string newToken = jwtHelper.GenerateToken(user);
@@ -86,6 +56,7 @@ public static class WebApplicationExtensions
         return app;
     }
 
+    #region -- Product Endpoints --
     /// <summary>
     /// -- Maps endpoints for managing products.
     /// </summary>
@@ -93,44 +64,44 @@ public static class WebApplicationExtensions
     /// <returns></returns>
     public static WebApplication MapProductEndpoints(this WebApplication app)
     {
-        // GET all products
+        // -- GET all products -- 
         app.MapGet("/products", async (IProductService productService) =>
         {
             var products = await productService.GetAllProductsAsync();
             return Results.Ok(products);
-        }).RequireAuthorization(); // 
+        }).RequireAuthorization();
 
-        // GET product by ID
+        // -- GET product by ID -- 
         app.MapGet("/products/{id}", async (int id, IProductService productService) =>
         {
             var product = await productService.GetProductByIdAsync(id);
             return product != null ? Results.Ok(product) : Results.NotFound();
         }).RequireAuthorization();
 
-        // POST a new product (Requires admin email claim)
+        // -- POST a new product (Requires admin email claim) -- 
         app.MapPost("/product", async (Product product, IProductService productService, ClaimsPrincipal user) =>
-        {          
+        {
             if (!user.HasClaim(ClaimTypes.Email, "admin@admin.com"))
                 return Results.Forbid();
 
             var createdProduct = await productService.CreateProductAsync(product);
             return Results.Created($"/products/{createdProduct.Id}", createdProduct);
-        }).RequireAuthorization(); 
-        
-        // PUT to update product details (Requires admin email claim)
+        }).RequireAuthorization();
+
+        // -- PUT to update product details (Requires admin email claim) -- 
         app.MapPut("/products/{id}", async (int id, Product product, IProductService productService, ClaimsPrincipal user) =>
         {
             if (!user.HasClaim(ClaimTypes.Email, "admin@admin.com"))
                 return Results.Forbid();
 
-            if (id != product.Id) 
+            if (id != product.Id)
                 return Results.BadRequest("Product ID in path and body mismatch.");
 
             var updated = await productService.UpdateProductAsync(product);
             return updated ? Results.NoContent() : Results.NotFound();
         }).RequireAuthorization();
 
-        // DELETE a product (Requires admin email claim)
+        // -- DELETE a product (Requires admin email claim) -- 
         app.MapDelete("/products/{id}", async (int id, IProductService productService, ClaimsPrincipal user) =>
         {
             if (!user.HasClaim(ClaimTypes.Email, "admin@admin.com"))
@@ -142,7 +113,9 @@ public static class WebApplicationExtensions
 
         return app;
     }
+    #endregion
 
+    #region  -- Cart Endpoints --
     /// <summary>
     /// -- Maps endpoints for managing the user's cart.
     /// </summary>
@@ -150,7 +123,7 @@ public static class WebApplicationExtensions
     /// <returns></returns>
     public static WebApplication MapCartEndpoints(this WebApplication app)
     {
-        // GET /cart: Retrieve cart items for the authenticated user
+        // -- GET /cart: Retrieve cart items for the authenticated user -- 
         app.MapGet("/cart", async (ClaimsPrincipal user, ICartService cartService) =>
         {
             var (isAuthorized, userId) = CheckIfUserIsAuthorized(user);
@@ -161,7 +134,7 @@ public static class WebApplicationExtensions
             return Results.Ok(cartItems);
         }).RequireAuthorization();
 
-        // POST /cart: Add a product to the user's cart
+        // -- POST /cart: Add a product to the user's cart -- 
         app.MapPost("/cart", async (CartItemDto cartItemDto, ClaimsPrincipal user, ICartService cartService) =>
         {
             var (isAuthorized, userId) = CheckIfUserIsAuthorized(user);
@@ -169,11 +142,11 @@ public static class WebApplicationExtensions
                 return Results.Unauthorized();
 
             var cartItem = new CartItem { UserId = userId, ProductId = cartItemDto.ProductId, Quantity = cartItemDto.Quantity, AddedAt = DateTime.UtcNow };
-            var addedItem = await cartService.AddOrUpdateCartItemAsync(cartItem); 
+            var addedItem = await cartService.AddOrUpdateCartItemAsync(cartItem);
             return Results.Created($"/cart/{addedItem.ProductId}", addedItem);
         }).RequireAuthorization();
 
-        // DELETE /cart/{productId}: Remove a product from the user's cart
+        // -- DELETE /cart/{productId}: Remove a product from the user's cart -- 
         app.MapDelete("/cart/{productId}", async (int productId, ClaimsPrincipal user, ICartService cartService) =>
         {
             var (isAuthorized, userId) = CheckIfUserIsAuthorized(user);
@@ -186,7 +159,9 @@ public static class WebApplicationExtensions
 
         return app;
     }
+    #endregion
 
+    #region  -- WishlistItem Endpoints --
     /// <summary>
     /// -- Maps endpoints for managing the user's wishlist.
     /// </summary>
@@ -194,7 +169,7 @@ public static class WebApplicationExtensions
     /// <returns></returns>
     public static WebApplication MapWishlistEndpoints(this WebApplication app)
     {
-        // GET /wishlist: Retrieve wishlist items for the authenticated user
+        // -- GET /wishlist: Retrieve wishlist items for the authenticated user -- 
         app.MapGet("/wishlist", async (ClaimsPrincipal user, IWishlistService wishlistService) =>
         {
             var (isAuthorized, userId) = CheckIfUserIsAuthorized(user);
@@ -205,7 +180,7 @@ public static class WebApplicationExtensions
             return Results.Ok(wishlistItems);
         }).RequireAuthorization();
 
-        // POST /wishlist: Add a product to the user's wishlist
+        // -- POST /wishlist: Add a product to the user's wishlist -- 
         app.MapPost("/wishlist", async (WishlistItemDto wishlistItemDto, ClaimsPrincipal user, IWishlistService wishlistService) =>
         {
             var (isAuthorized, userId) = CheckIfUserIsAuthorized(user);
@@ -217,7 +192,7 @@ public static class WebApplicationExtensions
             return Results.Created($"/wishlist/{addedItem.ProductId}", addedItem);
         }).RequireAuthorization();
 
-        // DELETE /wishlist/{productId}: Remove a product from the user's wishlist
+        // -- DELETE /wishlist/{productId}: Remove a product from the user's wishlist -- 
         app.MapDelete("/wishlist/{productId}", async (int productId, ClaimsPrincipal user, IWishlistService wishlistService) =>
         {
             var (isAuthorized, userId) = CheckIfUserIsAuthorized(user);
@@ -229,7 +204,8 @@ public static class WebApplicationExtensions
         }).RequireAuthorization();
 
         return app;
-    }
+    } 
+    #endregion
 
     /// <summary>
     /// -- Checks if the user is authorized and retrieves their user ID.
@@ -244,5 +220,4 @@ public static class WebApplicationExtensions
 
         return (true, userId);
     }
-
 }

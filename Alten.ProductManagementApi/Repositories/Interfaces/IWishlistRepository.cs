@@ -5,7 +5,6 @@ namespace Alten.ProductManagementApi.Repositories.Interfaces;
 public interface IWishlistRepository
 {
     Task<IEnumerable<WishlistItem>> GetWishlistItemsByUserIdAsync(int userId);
-    //Task<WishlistItem?> GetWishlistItemByIdAsync(int id);
     Task<WishlistItem?> GetWishlistItemByUserIdAndProductIdAsync(int userId, int productId); 
     Task<WishlistItem> AddWishlistItemAsync(WishlistItem wishlistItem);
     Task<bool> DeleteWishlistItemAsync(int userId, int productId);

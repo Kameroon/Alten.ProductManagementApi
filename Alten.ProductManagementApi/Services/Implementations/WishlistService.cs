@@ -21,11 +21,6 @@ public class WishlistService : IWishlistService
         return await _wishlistRepository.GetWishlistItemsByUserIdAsync(userId);
     }
 
-    //public async Task<WishlistItem?> GetWishlistItemByIdAsync(int id)
-    //{
-    //    return await _wishlistRepository.GetWishlistItemByIdAsync(id);
-    //}
-
     public async Task<WishlistItem> AddWishlistItemAsync(WishlistItem wishlistItem)
     {
         if (await CheckExistingProduct(wishlistItem.ProductId) == null)

@@ -27,8 +27,8 @@ public class ProductRepository : IProductRepository
 
     public async Task<int> AddProductAsync(Product product)
     {
-        var sql = @"INSERT INTO Products (Code, Name, Description, Image, Category, Price, Quantity, InternalReference, ShellId, InventoryStatus, Rating, CreatedAt, UpdatedAt)
-                        VALUES (@Code, @Name, @Description, @Image, @Category, @Price, @Quantity, @InternalReference, @ShellId, @InventoryStatus, @Rating, @CreatedAt, @UpdatedAt)
+        var sql = @"INSERT INTO Products (Code, Name, Description, Image, Category, Price, Quantity, InternalReference, ShellId, InventoryStatus, Rating, CreatedAt)
+                        VALUES (@Code, @Name, @Description, @Image, @Category, @Price, @Quantity, @InternalReference, @ShellId, @InventoryStatus, @Rating, @CreatedAt)
                         RETURNING Id;";
         return await _dbConnection.ExecuteScalarAsync<int>(sql, product);
     }

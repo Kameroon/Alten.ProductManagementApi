@@ -20,12 +20,6 @@ public class WishlistRepository : IWishlistRepository
         return await _dbConnection.QueryAsync<WishlistItem>(sql, new { UserId = userId });
     }
 
-    //public async Task<WishlistItem?> GetWishlistItemByIdAsync(int id)
-    //{
-    //    var sql = "SELECT Id, UserId, ProductId, AddedAt FROM WishlistItems WHERE Id = @Id;";
-    //    return await _dbConnection.QuerySingleOrDefaultAsync<WishlistItem>(sql, new { Id = id });
-    //}
-
     public async Task<WishlistItem?> GetWishlistItemByUserIdAndProductIdAsync(int userId, int productId)
     {
         var sql = "SELECT Id, UserId, ProductId, AddedAt FROM WishlistItems WHERE UserId = @UserId AND ProductId = @ProductId;";
